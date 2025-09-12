@@ -1,3 +1,9 @@
+### Run the server
+
+```
+make server-up
+```
+
 ### Manage up the local db
 
 ```
