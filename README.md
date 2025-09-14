@@ -9,6 +9,7 @@ make server-up
 ```
 make db-up
 make migrate-up
+make seed-up
 ```
 
 ### Get the single file of Tailwind CSS
@@ -34,12 +35,17 @@ Backend handlers next → implement API to hit the DB.
 UI last → build on top of real APIs (not mocks).
 ```
 
-### Setup golang-migrate CLI
+### Install base tools
 
 ```
 curl -L https://github.com/golang-migrate/migrate/releases/latest/download/migrate.linux-amd64.tar.gz | tar xvz
 sudo mv migrate /usr/local/bin/
 migrate -version
+
+sudo apt-get update
+sudo apt-get install -y postgresql-client
+psql --version
+
 ```
 
 ### Database setup guide
