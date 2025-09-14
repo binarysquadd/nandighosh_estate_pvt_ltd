@@ -8,7 +8,7 @@ db-down:
 	docker compose down
 
 DB_URL=postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable
-MIGRATIONS_PATH=backend/migrations
+MIGRATIONS_PATH=backend/internal/db/migrations
 
 migrate-up:
 	migrate -path $(MIGRATIONS_PATH) -database "$(DB_URL)" up
@@ -21,7 +21,7 @@ migrate-new:
 	migrate create -ext sql -dir $(MIGRATIONS_PATH) -seq $$name
 
 seed-up:
-	psql $(DB_URL) -f backend/seeds/dev.sql
+	psql $(DB_URL) -f backend/internal/db/dev.sql
 
 db-reset:
 	docker compose down -v

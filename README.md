@@ -28,12 +28,15 @@ curl -o jquery.min.js https://code.jquery.com/jquery-3.7.1.min.js
 
 ### The flow in which the project has been setup
 
-```
-DB schema first (light draft only) → defines the data you’ll manage.
-API contract second → how the frontend will talk to backend.
-Backend handlers next → implement API to hit the DB.
-UI last → build on top of real APIs (not mocks).
-```
+
+- DB schema (light draft) → tables for projects, tenants, payments, documents.
+- Migrations + seeds → reproducible, with dev data.
+- API contract (Markdown) → endpoints defined.
+- DB connection + model + handler + route → working for /projects.
+- UI refresh plan → jQuery fetch, no reloads.
+- Backend handlers next → implement API to hit the DB.
+- UI last → build on top of real APIs (not mocks).
+
 
 ### Install base tools
 
