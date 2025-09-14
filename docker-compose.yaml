@@ -1,37 +1,60 @@
 services:
   postgres:
     container_name: postgres_container
-    image: postgres
+    image: postgres:16.10-alpine3.22
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       POSTGRES_DB: postgres
       #PGDATA: /data/postgres
     volumes:
-       - ../postgres/data:/var/lib/postgresql/data
-       - ./db.sql:/docker-entrypoint-initdb.d/db.sql
+       - postgres_data:/var/lib/postgresql/data
+      #  - ../postgres/data:/var/lib/postgresql/data
     ports:
       - 5432:5432
     restart: unless-stopped
-
-  pgadmin:
-    container_name: pgadmin_container
-    image: dpage/pgadmin4
-    environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin4@pgadmin.org}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
-      PGADMIN_CONFIG_SERVER_MODE: 'False'
-      PGADMIN_CONFIG_PROXY_X_HOST_COUNT: 1
-      PGADMIN_CONFIG_PROXY_X_PREFIX_COUNT: 1
+    
+  migrate:
+    image: migrate/migrate:latest
+    container_name: migrate_container
     volumes:
-       - pgadmin:/var/lib/pgadmin
-    ports:
-      - "${PGADMIN_PORT:-3000}:80"
-    restart: unless-stopped
-    depends_on: 
+      - ./backend/migrations:/migrations
+    command: [
+      "-path", "/migrations",
+      "-database", "postgres://postgres:postgres@postgres:5432/postgres?sslmode=disable",
+      "up"
+    ]
+    depends_on:
       - postgres
+    restart: "no"   # only runs once, doesn’t stay alive
+
+  # pgadmin:
+  #   container_name: pgadmin_container
+  #   image: dpage/pgadmin4
+  #   environment:
+  #     PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin4@pgadmin.org}
+  #     PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
+  #     PGADMIN_CONFIG_SERVER_MODE: 'False'
+  #     PGADMIN_CONFIG_PROXY_X_HOST_COUNT: 1
+  #     PGADMIN_CONFIG_PROXY_X_PREFIX_COUNT: 1
+  #   volumes:
+  #      - pgadmin:/var/lib/pgadmin
+  #   ports:
+  #     - "${PGADMIN_PORT:-3000}:80"
+  #   restart: unless-stopped
+  #   depends_on: 
+  #     - postgres
+
+  # bytebase:
+  #   image: bytebase/bytebase:latest
+  #   container_name: bytebase_container
+  #   ports:
+  #     - "8080:8080"
+  #   volumes:
+  #     - ./data/bytebase:/var/opt/bytebase
+  #   restart: unless-stopped
 
 
 volumes:
-    #postgres:
-    pgadmin:
+    postgres_data:
+    # pgadmin:
