@@ -1,4 +1,20 @@
+"use client";
+
+import { usePathname } from "next/navigation";
+
 export default function Sidebar() {
+  const pathname = usePathname();
+
+  const isDashboard = pathname === "/" || pathname.startsWith("/dashboard");
+  const isProjects = pathname.startsWith("/projects");
+
+  const baseLink =
+    "flex items-center px-3 py-2 text-sm rounded transition";
+  const active =
+    "text-gray-900 bg-gray-100 font-medium";
+  const inactive =
+    "text-gray-600 hover:bg-gray-50 hover:text-gray-900";
+
   return (
     <aside className="w-56 bg-white border-r border-gray-200 flex flex-col h-screen sticky top-0">
       {/* Logo - More Compact */}
@@ -6,26 +22,28 @@ export default function Sidebar() {
         <h1 className="text-lg font-semibold text-gray-900">🏢 Nandighosh</h1>
         <p className="text-xs text-gray-500">Estate Manager</p>
       </div>
-      
+
       {/* Navigation - Tighter Spacing */}
       <nav className="flex-1 px-3 py-3 space-y-0.5">
-        <a 
-          href="/" 
-          className="flex items-center px-3 py-2 text-sm text-gray-900 bg-gray-100 rounded font-medium"
+        <a
+          href="/"
+          className={`${baseLink} ${isDashboard ? active : inactive}`}
+          aria-current={isDashboard ? "page" : undefined}
         >
           <span className="mr-2 text-base">📊</span>
           <span>Dashboard</span>
         </a>
-        
-        <a 
-          href="/projects" 
-          className="flex items-center px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded transition"
+
+        <a
+          href="/projects"
+          className={`${baseLink} ${isProjects ? active : inactive}`}
+          aria-current={isProjects ? "page" : undefined}
         >
           <span className="mr-2 text-base">📁</span>
           <span>Projects</span>
         </a>
       </nav>
-      
+
       {/* User Profile - More Compact */}
       <div className="px-3 py-3 border-t border-gray-200">
         <div className="flex items-center">
