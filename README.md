@@ -1,64 +1,36 @@
-### Run the server
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-```
-make server-up
-```
+## Getting Started
 
-### Set up the local db
+First, run the development server:
 
-```
-make db-up
-make migrate-up
-make seed-up
-```
-
-### Get the single file of Tailwind CSS
-
-```
-curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/download/v4.1.13/tailwindcss-linux-x64
-chmod +x tailwindcss-linux-x64
-./tailwindcss-linux-x64 -o tailwind-complete.css --content "**/*.{html,js,go}" --minify
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
 ```
 
-### Get the siongle file of JQuery
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-```
-curl -o jquery.min.js https://code.jquery.com/jquery-3.7.1.min.js
-```
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-### The flow in which the project has been setup
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Learn More
 
-- DB schema (light draft) → tables for projects, tenants, payments, documents.
-- Migrations + seeds → reproducible, with dev data.
-- API contract (Markdown) → endpoints defined.
-- DB connection + model + handler + route → working for /projects.
-- UI refresh plan → jQuery fetch, no reloads.
-- Backend handlers next → implement API to hit the DB.
-- UI last → build on top of real APIs (not mocks).
+To learn more about Next.js, take a look at the following resources:
 
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-### Install base tools
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-```
-curl -L https://github.com/golang-migrate/migrate/releases/latest/download/migrate.linux-amd64.tar.gz | tar xvz
-sudo mv migrate /usr/local/bin/
-migrate -version
+## Deploy on Vercel
 
-sudo apt-get update
-sudo apt-get install -y postgresql-client
-psql --version
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-```
-
-### Database setup guide
-
-- spinup the instance
-- spinup a db in the instance
-- setup the initial schema
-- setup the seed data
-- connect everything in docker compose and makefile
-
-### Docs to look for
-
-- Git commit standard - https://cbea.ms/git-commit/
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
