@@ -1,57 +1,79 @@
 "use client";
 
-import { useState } from "react";
 import {
-  Calendar,
-  Smartphone,
-  CreditCard,
-  Banknote,
   Mail,
   MessageSquare,
   PhoneCall,
+  Smartphone,
+  CreditCard,
+  Banknote,
 } from "lucide-react";
+import { useSheetsData } from "@/hooks/useSheetsData";
 
-export default function PaymentSection() {
-  const [payments] = useState([
-    {
-      date: "Feb 15, 2024",
-      amount: "₹1.5 Cr",
-      mode: "UPI",
-      status: "Paid",
-      note: "TXN UPI-2394XYZ",
-    },
-    {
-      date: "Jun 10, 2024",
-      amount: "₹2 Cr",
-      mode: "Cheque",
-      status: "Paid",
-      note: "Cheque #457283",
-    },
-    {
-      date: "Dec 05, 2024",
-      amount: "₹1.2 Cr",
-      mode: "Bank Transfer",
-      status: "Scheduled",
-      note: "Next installment – Block A",
-    },
-  ]);
+type Props = {
+  projectId: string;
+};
 
-  const next = payments.find((p) => p.status !== "Paid");
+export default function PaymentSection({ projectId }: Props) {
+  // ✅ Fetch all payments from Google Sheets
+  const { data: allPayments, isLoading, error } = useSheetsData("Payments");
 
-  const modeIcon = (mode: string) =>
-    mode === "UPI" ? (
-      <Smartphone className="w-4 h-4 text-blue-500 mr-1" />
-    ) : mode === "Card" ? (
-      <CreditCard className="w-4 h-4 text-blue-500 mr-1" />
-    ) : (
-      <Banknote className="w-4 h-4 text-blue-500 mr-1" />
+  // ✅ Filter only payments for this project
+  const payments = allPayments?.filter(
+    (p: any) => p.projectId === projectId
+  ) || [];
+
+  // ✅ Identify next scheduled payment
+  const next = payments.find((p: any) => p.status === "Scheduled");
+
+  // ✅ Calculate budget summary (auto if totals not in sheet)
+  const totalPaid = payments
+    .filter((p: any) => p.status === "Paid")
+    .reduce((sum: number, p: any) => sum + Number(p.amount.replace(/[₹,]/g, "")), 0);
+  const totalBudget =
+    payments.reduce((sum: number, p: any) => sum + Number(p.amount.replace(/[₹,]/g, "")), 0) || 0;
+  const pending = totalBudget - totalPaid;
+  const utilizedPercent = totalBudget ? (totalPaid / totalBudget) * 100 : 0;
+
+  // ✅ Loading & Error
+  if (isLoading)
+    return (
+      <div className="bg-white rounded-xl border border-gray-200 p-5 text-sm text-gray-500">
+        Loading payment details...
+      </div>
     );
+
+  if (error)
+    return (
+      <div className="bg-white rounded-xl border border-gray-200 p-5 text-sm text-red-500">
+        Failed to load payment data.
+      </div>
+    );
+
+  // ✅ Fallback for empty projects
+  if (payments.length === 0)
+    return (
+      <div className="bg-white rounded-xl border border-gray-200 p-5 text-sm text-gray-500">
+        No payment records found for this project.
+      </div>
+    );
+
+  // ✅ Helper for icons
+  const modeIcon = (mode: string) => {
+    switch (mode) {
+      case "UPI":
+        return <Smartphone className="w-4 h-4 text-blue-500 mr-1" />;
+      case "Card":
+        return <CreditCard className="w-4 h-4 text-blue-500 mr-1" />;
+      default:
+        return <Banknote className="w-4 h-4 text-blue-500 mr-1" />;
+    }
+  };
 
   return (
     <section className="mt-4">
-      {/* Container card */}
       <div className="bg-white border rounded-xl shadow-sm overflow-hidden">
-        {/* Header row */}
+        {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b bg-gray-50">
           <h2 className="text-sm font-semibold text-gray-800 flex items-center gap-2">
             💰 Project Financials
@@ -61,37 +83,43 @@ export default function PaymentSection() {
           </button>
         </div>
 
-        {/* Summary row */}
+        {/* Summary */}
         <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-gray-100">
           <div className="p-4 text-center">
             <p className="text-xs text-gray-500">Total Budget</p>
-            <p className="text-xl font-semibold text-gray-900 mt-1">₹12 Cr</p>
+            <p className="text-xl font-semibold text-gray-900 mt-1">
+              ₹{totalBudget.toLocaleString()}
+            </p>
           </div>
           <div className="p-4 text-center">
             <p className="text-xs text-gray-500">Paid</p>
-            <p className="text-xl font-semibold text-green-600 mt-1">₹7.8 Cr</p>
+            <p className="text-xl font-semibold text-green-600 mt-1">
+              ₹{totalPaid.toLocaleString()}
+            </p>
           </div>
           <div className="p-4 text-center">
             <p className="text-xs text-gray-500">Pending</p>
-            <p className="text-xl font-semibold text-red-500 mt-1">₹2.5 Cr</p>
+            <p className="text-xl font-semibold text-red-500 mt-1">
+              ₹{pending.toLocaleString()}
+            </p>
           </div>
         </div>
 
-        {/* Progress bar */}
+        {/* Progress */}
         <div className="px-4 py-3 border-t border-gray-100 bg-gray-50">
           <div className="flex justify-between text-xs font-medium text-gray-700 mb-1">
             <span>Budget Utilized</span>
-            <span>65%</span>
+            <span>{utilizedPercent.toFixed(1)}%</span>
           </div>
           <div className="h-2 bg-gray-200 rounded-full">
             <div
-              className="h-2 bg-blue-600 rounded-full"
-              style={{ width: "65%" }}
-            ></div>
+              className="h-2 bg-blue-600 rounded-full transition-all"
+              style={{ width: `${utilizedPercent}%` }}
+            />
           </div>
         </div>
 
-        {/* Payments table */}
+        {/* Payments Table */}
         <div className="p-4">
           <h3 className="text-sm font-semibold text-gray-800 mb-3">
             Recent Payments
@@ -108,7 +136,7 @@ export default function PaymentSection() {
                 </tr>
               </thead>
               <tbody>
-                {payments.map((p, i) => (
+                {payments.map((p: any, i: number) => (
                   <tr
                     key={i}
                     className={`border-b last:border-0 ${
@@ -153,7 +181,7 @@ export default function PaymentSection() {
               <p className="text-xs text-gray-500">{next.note}</p>
             </div>
 
-            {/* Reminder options */}
+            {/* Reminder buttons */}
             <div className="flex items-center gap-2">
               <button className="flex items-center bg-white text-gray-800 text-xs font-medium px-3 py-2 rounded-md border border-gray-200 hover:bg-gray-100 transition">
                 <Mail className="w-3.5 h-3.5 mr-1.5 text-blue-600" /> Email

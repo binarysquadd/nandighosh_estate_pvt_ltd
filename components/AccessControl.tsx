@@ -2,31 +2,74 @@
 
 import { useState } from "react";
 import { UserPlus, ShieldCheck, Trash2 } from "lucide-react";
+import { useSheetsData } from "@/hooks/useSheetsData";
 
-type Member = { id: string; name: string; role: "Admin" | "Engineer" | "Accountant" | "Viewer"; email: string };
+type Member = {
+  id: string;
+  projectId: string;
+  name: string;
+  role: "Admin" | "Engineer" | "Accountant" | "Viewer";
+  email: string;
+};
 
-export default function AccessControl() {
-  const [members, setMembers] = useState<Member[]>([
-    { id: "1", name: "A. Mohanty", role: "Admin", email: "admin@nandighosh.com" },
-    { id: "2", name: "B. Panda", role: "Engineer", email: "engineer@site.com" },
-  ]);
+export default function AccessControl({ projectId }: { projectId: string }) {
+  // ✅ Fetch from the real Access sheet
+  const { data: allMembers, isLoading, error } = useSheetsData("Access");
+  const [localMembers, setLocalMembers] = useState<Member[]>([]);
+
+  // ✅ Filter only for this project
+  const sheetMembers =
+    allMembers?.filter((m: any) => m.projectId === projectId) || [];
+
+  // ✅ Merge Sheet + locally added members
+  const members = [...sheetMembers, ...localMembers];
 
   const addMember = () => {
     const name = window.prompt("Enter name:");
     const email = window.prompt("Enter email:");
-    const role = window.prompt("Role (Admin/Engineer/Accountant/Viewer):") as Member["role"];
+    const role = (window.prompt(
+      "Role (Admin/Engineer/Accountant/Viewer):"
+    ) as Member["role"]) || "Viewer";
+
     if (!name || !email) return;
-    setMembers([...members, { id: Date.now().toString(), name, email, role: role || "Viewer" }]);
+    setLocalMembers((prev) => [
+      ...prev,
+      { id: Date.now().toString(), projectId, name, email, role },
+    ]);
   };
 
-  const removeMember = (id: string) => setMembers(members.filter((m) => m.id !== id));
+  const removeMember = (id: string) =>
+    setLocalMembers((prev) => prev.filter((m) => m.id !== id));
+
+  if (isLoading)
+    return (
+      <div className="bg-white rounded-xl border border-gray-200 p-5 text-sm text-gray-500">
+        Loading access list...
+      </div>
+    );
+
+  if (error)
+    return (
+      <div className="bg-white rounded-xl border border-gray-200 p-5 text-sm text-red-500">
+        Failed to load access data.
+      </div>
+    );
+
+  if (members.length === 0)
+    return (
+      <div className="bg-white rounded-xl border border-gray-200 p-5 text-sm text-gray-500">
+        No access entries found for this project.
+      </div>
+    );
 
   return (
     <section className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <ShieldCheck className="w-5 h-5 text-blue-600" />
-          <h2 className="text-lg font-semibold text-gray-900">Stakeholder Access Control</h2>
+          <h2 className="text-lg font-semibold text-gray-900">
+            Stakeholder Access Control
+          </h2>
         </div>
         <button
           onClick={addMember}
@@ -48,7 +91,10 @@ export default function AccessControl() {
           </thead>
           <tbody>
             {members.map((m) => (
-              <tr key={m.id} className="border-b last:border-0 hover:bg-gray-50 transition">
+              <tr
+                key={m.id}
+                className="border-b last:border-0 hover:bg-gray-50 transition"
+              >
                 <td className="px-3 py-2 font-medium">{m.name}</td>
                 <td className="px-3 py-2">
                   <span

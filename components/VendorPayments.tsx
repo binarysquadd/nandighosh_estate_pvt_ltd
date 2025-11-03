@@ -1,22 +1,34 @@
 "use client";
 
 import { Wallet2, CheckCircle2, AlertTriangle } from "lucide-react";
+import { useSheetsData } from "@/hooks/useSheetsData";
 
-type Vendor = {
-  name: string;
-  service: string;
-  amount: string;
-  paid: number; // %
-  dueDate: string;
-};
+type Props = { projectId: string };
 
-export default function VendorPayments({ vendors }: { vendors?: Vendor[] }) {
-  const list =
-    vendors || [
-      { name: "Sai Electricals", service: "Electrical Wiring", amount: "₹80 000", paid: 75, dueDate: "2024-07-25" },
-      { name: "Maa Cement Works", service: "Civil Contract", amount: "₹2.4 L", paid: 100, dueDate: "2024-06-12" },
-      { name: "Sunshine Paints", service: "Painting", amount: "₹60 000", paid: 30, dueDate: "2024-08-10" },
-    ];
+function parsePercent(v: any) {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : 0;
+}
+
+export default function VendorPayments({ projectId }: Props) {
+  const { data: allVendors, isLoading, error } = useSheetsData("Vendors");
+
+  if (isLoading) {
+    return (
+      <section className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+        <div className="text-sm text-gray-500">Loading vendor payments…</div>
+      </section>
+    );
+  }
+  if (error) {
+    return (
+      <section className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+        <div className="text-sm text-red-600">Failed to load vendor payments.</div>
+      </section>
+    );
+  }
+
+  const rows = (allVendors || []).filter((v: any) => v.projectId === projectId);
 
   return (
     <section className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
@@ -37,30 +49,33 @@ export default function VendorPayments({ vendors }: { vendors?: Vendor[] }) {
             </tr>
           </thead>
           <tbody>
-            {list.map((v, i) => (
-              <tr key={i} className="border-b last:border-0 hover:bg-gray-50">
-                <td className="px-3 py-2 font-medium">{v.name}</td>
-                <td className="px-3 py-2">{v.service}</td>
-                <td className="px-3 py-2">{v.amount}</td>
-                <td className="px-3 py-2">
-                  <div className="w-32 bg-gray-100 rounded-full h-2">
-                    <div
-                      className={`h-2 rounded-full ${v.paid === 100 ? "bg-green-600" : "bg-blue-600"}`}
-                      style={{ width: `${v.paid}%` }}
-                    ></div>
-                  </div>
-                  <span className="text-xs text-gray-500">{v.paid}%</span>
-                </td>
-                <td className="px-3 py-2 text-xs text-gray-600 flex items-center gap-1">
-                  {v.paid === 100 ? (
-                    <CheckCircle2 className="w-3 h-3 text-green-600" />
-                  ) : (
-                    <AlertTriangle className="w-3 h-3 text-yellow-500" />
-                  )}
-                  {v.dueDate}
-                </td>
-              </tr>
-            ))}
+            {rows.map((v: any, i: number) => {
+              const pct = parsePercent(v.paidPercent);
+              return (
+                <tr key={i} className="border-b last:border-0 hover:bg-gray-50">
+                  <td className="px-3 py-2 font-medium">{v.vendor}</td>
+                  <td className="px-3 py-2">{v.service}</td>
+                  <td className="px-3 py-2">{v.amount}</td>
+                  <td className="px-3 py-2">
+                    <div className="w-32 bg-gray-100 rounded-full h-2">
+                      <div
+                        className={`h-2 rounded-full ${pct === 100 ? "bg-green-600" : "bg-blue-600"}`}
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                    <span className="text-xs text-gray-500">{pct}%</span>
+                  </td>
+                  <td className="px-3 py-2 text-xs text-gray-600 flex items-center gap-1">
+                    {pct === 100 ? (
+                      <CheckCircle2 className="w-3 h-3 text-green-600" />
+                    ) : (
+                      <AlertTriangle className="w-3 h-3 text-yellow-500" />
+                    )}
+                    {v.dueDate || "—"}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

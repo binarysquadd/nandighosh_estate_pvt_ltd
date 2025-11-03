@@ -1,13 +1,13 @@
-import { dummyProjects } from "@/lib/dummy-data";
-import { notFound } from "next/navigation";
-import Link from "next/link";
-import {
-  LineChart,
-  Clock,
-  FileText,
-  ChevronDown,
-} from "lucide-react";
+"use client";
 
+import React from "react";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { LineChart, Clock, FileText } from "lucide-react";
+
+import { useSheetsData } from "@/hooks/useSheetsData";
+
+// Components
 import ProjectOverview from "@/components/ProjectOverview";
 import ClientBoard from "@/components/ClientBoard";
 import TasksBoard from "@/components/TasksBoard";
@@ -36,13 +36,45 @@ function getStatusColor(status: string) {
   }
 }
 
-export default async function ProjectDetailPage({
+export default function ProjectDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const { id } = await params;
-  const project = dummyProjects.find((p) => p.id === id);
+  const [projectId, setProjectId] = React.useState<string | null>(null);
+
+  // ✅ Extract project ID safely
+  React.useEffect(() => {
+    (async () => {
+      const { id } = await params;
+      setProjectId(id);
+    })();
+  }, [params]);
+
+  // ✅ Fetch projects data from Google Sheets
+  const { data: projects, isLoading, error } = useSheetsData("Projects");
+
+  if (!projectId)
+    return (
+      <div className="p-6 text-sm text-gray-500">Preparing project details...</div>
+    );
+
+  if (isLoading)
+    return (
+      <div className="p-6 text-sm text-gray-500">
+        Loading project data from Google Sheets...
+      </div>
+    );
+
+  if (error)
+    return (
+      <div className="p-6 text-sm text-red-600">
+        Error fetching project data from Google Sheets.
+      </div>
+    );
+
+  // ✅ Find the matching project
+  const project = projects.find((p: any) => p.id === projectId);
   if (!project) return notFound();
 
   return (
@@ -57,108 +89,111 @@ export default async function ProjectDetailPage({
             ← Back to Projects
           </Link>
 
-          <h1 className="text-2xl font-semibold text-gray-900">
-            {project.name}
-          </h1>
+          <h1 className="text-2xl font-semibold text-gray-900">{project.name}</h1>
           <p className="text-sm text-gray-500">{project.location}</p>
 
           {/* Snapshot KPIs */}
           <div className="flex flex-wrap gap-3 mt-3 text-xs sm:text-sm text-gray-600">
             <span className="flex items-center gap-1">
               <LineChart className="w-4 h-4 text-blue-500" />
-              <strong>{project.progress}%</strong> complete
+              <strong>{project.progress || 0}%</strong> complete
             </span>
             <span className="flex items-center gap-1">
               <Clock className="w-4 h-4 text-orange-500" />
               Next milestone:{" "}
               <strong className="text-blue-600">
-                {project.nextMilestone}
+                {project.nextMilestone || "—"}
               </strong>
             </span>
             <span className="flex items-center gap-1">
               <FileText className="w-4 h-4 text-green-500" />
-              Budget: <strong>{project.budget}</strong>
+              Budget: <strong>{project.budget || "—"}</strong>
             </span>
           </div>
         </div>
 
         <span
           className={`px-3 py-1 rounded-md text-sm font-medium ${getStatusColor(
-            project.status
+            project.status || "Planning"
           )}`}
         >
-          {project.status}
+          {project.status || "Planning"}
         </span>
       </header>
 
       {/* ========== MAIN CONTENT ========== */}
 
-      {/* 1️⃣ Project Overview */}
+      {/* Overview */}
       <section id="overview" className="scroll-mt-20">
         <ProjectOverview project={project} />
       </section>
 
-      {/* 2️⃣ Financial Health */}
+      {/* Financial Summary */}
       <section id="financial-health" className="scroll-mt-20">
-        <FinancialHealth />
+        <FinancialHealth projectId={project.id} />
       </section>
 
-      {/* 3️⃣ Client Information */}
+      {/* Client Info */}
       <section id="client" className="scroll-mt-20">
         <ClientBoard project={project} />
       </section>
 
-      {/* 4️⃣ Material Procurement */}
+      {/* Material Tracker */}
       <section id="materials" className="scroll-mt-20">
-        <MaterialTracker />
+        <MaterialTracker projectId={project.id} />
       </section>
 
-      {/* LabourSummary */}
-      <section id="materials" className="scroll-mt-20">
-        <LabourSummary />
+      {/* Labour Summary */}
+      <section id="labour" className="scroll-mt-20">
+        <LabourSummary projectId={project.id} />
       </section>
 
-      {/* SiteUpdates */}
-      <section id="materials" className="scroll-mt-20">
-        <SiteUpdates />
+      {/* Site Updates */}
+      <section id="updates" className="scroll-mt-20">
+        <SiteUpdates projectId={project.id} />
       </section>
 
-      {/* MilestoneBoard */}
-      <section id="materials" className="scroll-mt-20">
-        <MilestoneBoard />
+      {/* Milestones */}
+      <section id="milestones" className="scroll-mt-20">
+        <MilestoneBoard projectId={project.id} />
       </section>
 
-      {/* 💰 Sales */}
+      {/* Sales */}
       <section id="sales" className="scroll-mt-20">
-        <SalesDashboard />
+        <SalesDashboard projectId={project.id} />
       </section>
 
-      {/* 5️⃣ Tasks / Approvals */}
+      {/* Tasks */}
       <section id="tasks" className="scroll-mt-20">
         <TasksBoard project={project} />
       </section>
 
-      {/* 6️⃣ Payment Summary */}
+      {/* Payments */}
       <section id="payments" className="scroll-mt-20">
-        <PaymentSection />
+        <PaymentSection projectId={project.id} />
       </section>
 
-      {/* 7️⃣ Documents & Compliance */}
+      {/* Documents */}
       <section id="documents" className="scroll-mt-20">
-        <DocumentsSection />
+        <DocumentsSection projectId={project.id} />
       </section>
 
-      {/* 7️⃣ TaxSummary */}
-      <section id="documents" className="scroll-mt-20">
-        <TaxSummary />
+      {/* Tax */}
+      <section id="tax" className="scroll-mt-20">
+        <TaxSummary projectId={project.id} />
       </section>
 
-      {/* 7️⃣ AccessControl */}
-      <section id="documents" className="scroll-mt-20">
-        <AccessControl />
+      {/* Access Control */}
+      <section id="access" className="scroll-mt-20">
+        <AccessControl projectId={project.id} />
       </section>
 
-      {/* Empty state if no data */}
+      {/* Vendor Payments */}
+      <section id="vendors" className="scroll-mt-20">
+        <VendorPayments projectId={project.id} />
+      </section>
+
+      {/* Empty state */}
       {!project.pendingTasks?.length && (
         <div className="text-center py-12 text-gray-400 text-sm">
           <img
@@ -179,74 +214,6 @@ export default async function ProjectDetailPage({
           day: "numeric",
         })}
       </footer>
-
-      {/* Floating Section Nav */}
-      {/* <nav className="hidden md:block fixed bottom-6 right-6 bg-white border border-gray-200 shadow-md rounded-xl p-3 w-44 text-sm">
-        <p className="text-gray-500 font-medium mb-2 flex items-center gap-1">
-          Jump to <ChevronDown className="w-3 h-3" />
-        </p>
-        <ul className="space-y-1 text-gray-700">
-          <li>
-            <a
-              href="#overview"
-              className="block hover:text-blue-600 transition-colors"
-            >
-              Overview
-            </a>
-          </li>
-          <li>
-            <a
-              href="#financial-health"
-              className="block hover:text-blue-600 transition-colors"
-            >
-              Financial Health
-            </a>
-          </li>
-          <li>
-            <a
-              href="#client"
-              className="block hover:text-blue-600 transition-colors"
-            >
-              Client
-            </a>
-          </li>
-          <li>
-            <a
-              href="#materials"
-              className="block hover:text-blue-600 transition-colors"
-            >
-              Materials
-            </a>
-          </li>
-          <li>
-            <a
-              href="#tasks"
-              className="block hover:text-blue-600 transition-colors"
-            >
-              Tasks
-            </a>
-          </li>
-          <li>
-            <a
-              href="#payments"
-              className="block hover:text-blue-600 transition-colors"
-            >
-              Payments
-            </a>
-          </li>
-          <li>
-            <a
-              href="#documents"
-              className="block hover:text-blue-600 transition-colors"
-            >
-              Documents
-            </a>
-          </li>
-
-          <li><a href="#milestones" className="block hover:text-blue-600 transition-colors">Milestones</a></li>
-          <li><a href="#sales" className="block hover:text-blue-600 transition-colors">Sales</a></li>
-        </ul>
-      </nav> */}
     </div>
   );
 }
