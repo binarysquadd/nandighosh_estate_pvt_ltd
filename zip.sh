@@ -5,6 +5,8 @@ OUTPUT="project-debug-$(date +%Y%m%d-%H%M%S).zip"
 zip -r "$OUTPUT" \
   app/ \
   components/ \
+  functions/ \
+  hooks/ \
   lib/ \
   public/ \
   package.json \
@@ -13,8 +15,8 @@ zip -r "$OUTPUT" \
   next.config.ts \
   tailwind.config.ts \
   postcss.config.mjs \
-  .env.local \
-  README.md \
+  .env.sample.local \
+  global.d.ts \
   -x "*/node_modules/*" "*/.next/*" "*.git/*" "*.log" "*/.env.local"
 
 echo "Created: $OUTPUT"
