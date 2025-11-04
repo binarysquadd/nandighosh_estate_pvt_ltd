@@ -6,8 +6,7 @@ const fetcher = async (url: string) => {
   const res = await fetch(url, { cache: "no-store" });
   if (!res.ok) throw new Error(`Failed to fetch: ${res.status} ${res.statusText}`);
   const json = await res.json();
-  // your API returns { success: boolean, data: any[] }
-  return Array.isArray(json?.data) ? json.data : [];
+  return Array.isArray(json) ? json : [];
 };
 
 // ✅ Named export
