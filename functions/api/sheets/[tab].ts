@@ -3,7 +3,7 @@
 */
 
 export interface Env {
-  GOOGLE_CLIENT_EMAIL: string;
+  GOOGLE_SERVICE_ACCOUNT_EMAIL: string;
   GOOGLE_PRIVATE_KEY: string;
   GOOGLE_SHEET_ID: string;
 }
@@ -28,7 +28,7 @@ async function getAccessToken(env: Env): Promise<string> {
   const header = btoa(JSON.stringify({ alg: "RS256", typ: "JWT" }));
   const claim = btoa(
     JSON.stringify({
-      iss: env.GOOGLE_CLIENT_EMAIL,
+      iss: env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
       scope: "https://www.googleapis.com/auth/spreadsheets",
       aud: "https://oauth2.googleapis.com/token",
       iat: now,

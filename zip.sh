@@ -17,6 +17,8 @@ zip -r "$OUTPUT" \
   postcss.config.mjs \
   .env.sample.local \
   global.d.ts \
+  open-next.config.ts \
+  wrangler.toml \
   -x "*/node_modules/*" "*/.next/*" "*.git/*" "*.log" "*/.env.local"
 
 echo "Created: $OUTPUT"
