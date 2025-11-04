@@ -1,12 +1,3 @@
-#   main = ".open-next/worker.js"
-#   name = "nandighosh-real-estate-manager"
-#   compatibility_date = "2025-03-25"
-#   compatibility_flags = ["nodejs_compat"]
-#   [assets]
-#   directory = ".open-next/assets"
-#   binding = "ASSETS"
-
-
 name = "nandighosh-estate"
 main = ".open-next/worker.js"
 compatibility_date = "2025-10-11"
@@ -15,3 +6,6 @@ compatibility_flags = ["nodejs_compat"]
 [assets]
 directory = ".open-next/assets"
 binding = "ASSETS"
+
+[build]
+command = "npm run build:cf"
