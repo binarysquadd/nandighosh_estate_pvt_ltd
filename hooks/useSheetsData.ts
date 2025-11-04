@@ -9,7 +9,6 @@ const fetcher = async (url: string) => {
   return Array.isArray(json) ? json : [];
 };
 
-// ✅ Named export
 export function useSheetsData(sheetName: string) {
   const { data, error, isLoading, mutate } = useSWR(`/api/sheets/${sheetName}`, fetcher, {
     revalidateOnFocus: false,
@@ -25,5 +24,4 @@ export function useSheetsData(sheetName: string) {
   };
 }
 
-// ✅ Default export (so BOTH `import useSheetsData` and `import { useSheetsData }` work)
 export default useSheetsData;

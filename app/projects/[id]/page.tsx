@@ -195,18 +195,6 @@ export default function ProjectDetailPage({
         <VendorPayments projectId={project.id} />
       </section>
 
-      {/* Empty state */}
-      {!project.pendingTasks?.length && (
-        <div className="text-center py-12 text-gray-400 text-sm">
-          <img
-            src="/empty-state.svg"
-            alt="No data"
-            className="w-24 mx-auto mb-3 opacity-70"
-          />
-          Nothing to show yet — project setup in progress.
-        </div>
-      )}
-
       {/* Footer */}
       <footer className="text-xs text-gray-400 text-center pt-8 pb-4">
         Last updated:{" "}
