@@ -1,134 +1,251 @@
-export interface Env {
+// /functions/api/sheets/[tab].ts
+// Cloudflare Pages Function – Edge-safe Google Sheets proxy
+import { SignJWT, importPKCS8, jwtVerify } from "jose";
+
+type Env = {
+  GOOGLE_CLIENT_EMAIL: string;
+  GOOGLE_PRIVATE_KEY: string; // stored with literal newlines in CF Pages (no \n escaping)
   GOOGLE_SHEET_ID: string;
-  GOOGLE_SERVICE_ACCOUNT_EMAIL: string;
-  GOOGLE_PRIVATE_KEY: string;
-}
+};
+
+const GOOGLE_TOKEN_AUD = "https://oauth2.googleapis.com/token";
+const SHEETS_BASE = "https://sheets.googleapis.com/v4/spreadsheets";
 
 async function getAccessToken(env: Env): Promise<string> {
-  const now = Math.floor(Date.now() / 1000);
-  
-  const header = {
-    alg: "RS256",
-    typ: "JWT"
-  };
-  
-  const payload = {
-    iss: env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-    scope: "https://www.googleapis.com/auth/spreadsheets.readonly",
-    aud: "https://oauth2.googleapis.com/token",
-    exp: now + 3600,
-    iat: now
-  };
+  // Convert PEM to a PKCS#8 key for jose
+  const privateKeyPEM = env.GOOGLE_PRIVATE_KEY;
+  const alg = "RS256";
 
-  const encodedHeader = btoa(JSON.stringify(header)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
-  const encodedPayload = btoa(JSON.stringify(payload)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
-  const unsignedToken = `${encodedHeader}.${encodedPayload}`;
+  const pkcs8 = await importPKCS8(privateKeyPEM, alg);
 
-  // Import private key
-  const privateKeyPem = env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n');
-  const pemHeader = "-----BEGIN PRIVATE KEY-----";
-  const pemFooter = "-----END PRIVATE KEY-----";
-  const pemContents = privateKeyPem.substring(
-    pemHeader.length,
-    privateKeyPem.length - pemFooter.length
-  ).replace(/\s/g, '');
-  
-  const binaryKey = Uint8Array.from(atob(pemContents), c => c.charCodeAt(0));
+  const iat = Math.floor(Date.now() / 1000);
+  const exp = iat + 60 * 55; // 55 minutes
 
-  const cryptoKey = await crypto.subtle.importKey(
-    "pkcs8",
-    binaryKey,
-    {
-      name: "RSASSA-PKCS1-v1_5",
-      hash: "SHA-256"
-    },
-    false,
-    ["sign"]
-  );
+  const jwt = await new SignJWT({
+    iss: env.GOOGLE_CLIENT_EMAIL,
+    scope: "https://www.googleapis.com/auth/spreadsheets",
+    aud: GOOGLE_TOKEN_AUD,
+  })
+    .setProtectedHeader({ alg, typ: "JWT" })
+    .setIssuedAt(iat)
+    .setExpirationTime(exp)
+    .setIssuer(env.GOOGLE_CLIENT_EMAIL)
+    .setAudience(GOOGLE_TOKEN_AUD)
+    .sign(pkcs8);
 
-  const signature = await crypto.subtle.sign(
-    "RSASSA-PKCS1-v1_5",
-    cryptoKey,
-    new TextEncoder().encode(unsignedToken)
-  );
+  const form = new URLSearchParams();
+  form.set("grant_type", "urn:ietf:params:oauth:grant-type:jwt-bearer");
+  form.set("assertion", jwt);
 
-  const encodedSignature = btoa(String.fromCharCode(...new Uint8Array(signature)))
-    .replace(/=/g, '')
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_');
-
-  const jwt = `${unsignedToken}.${encodedSignature}`;
-
-  const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
+  const resp = await fetch(GOOGLE_TOKEN_AUD, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded"
-    },
-    body: `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${jwt}`
+    body: form,
   });
-
-  if (!tokenResponse.ok) {
-    const errorText = await tokenResponse.text();
-    throw new Error(`Token request failed: ${errorText}`);
+  if (!resp.ok) {
+    const t = await resp.text();
+    throw new Error(`OAuth token error: ${resp.status} ${t}`);
   }
-
-  const tokenData = await tokenResponse.json();
-  return tokenData.access_token;
+  const data = (await resp.json()) as { access_token: string };
+  return data.access_token;
 }
 
-export const onRequestGet: PagesFunction<Env> = async (context) => {
-  const { params, env } = context;
+function json(data: unknown, init: number | ResponseInit = 200): Response {
+  const initObj = typeof init === "number" ? { status: init } : init;
+  return new Response(JSON.stringify(data), {
+    ...initObj,
+    headers: { "content-type": "application/json; charset=utf-8", ...(initObj as any).headers },
+  });
+}
 
+// Map A1:Z rows -> array of objects
+function rowsToObjects(rows: string[][]) {
+  const [headers, ...rest] = rows;
+  return rest.map((r) => {
+    const obj: Record<string, string> = {};
+    headers.forEach((h, i) => {
+      obj[h] = r[i] ?? "";
+    });
+    return obj;
+  });
+}
+
+export const onRequestGet: PagesFunction<Env> = async ({ params, env }) => {
   try {
-    const tab = (params as Record<string, string>).tab;
-    if (!tab) {
-      return new Response(JSON.stringify({ error: "Missing sheet name" }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" },
-      });
-    }
+    const tab = decodeURIComponent(String((params as any).tab || ""));
+    if (!tab) return json({ error: "Missing tab" }, 400);
 
     const token = await getAccessToken(env);
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${env.GOOGLE_SHEET_ID}/values/${encodeURIComponent(tab)}`;
+    const range = encodeURIComponent(`${tab}!A1:Z1000`);
 
-    const res = await fetch(url, {
-      headers: {
-        Authorization: `Bearer ${token}`
+    const resp = await fetch(
+      `${SHEETS_BASE}/${env.GOOGLE_SHEET_ID}/values/${range}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+
+    if (!resp.ok) {
+      const txt = await resp.text();
+      return json({ error: `Sheets GET failed: ${txt}` }, 500);
+    }
+    const data = (await resp.json()) as { values?: string[][] };
+    if (!data.values || data.values.length === 0) {
+      return json({ data: [] });
+    }
+    return json({ data: rowsToObjects(data.values) });
+  } catch (e: any) {
+    return json({ error: e.message }, 500);
+  }
+};
+
+export const onRequestPost: PagesFunction<Env> = async ({ request, params, env }) => {
+  try {
+    const tab = decodeURIComponent(String((params as any).tab || ""));
+    if (!tab) return json({ error: "Missing tab" }, 400);
+
+    const body = await request.json();
+    const token = await getAccessToken(env);
+
+    // Fetch headers to keep column order
+    const headerResp = await fetch(
+      `${SHEETS_BASE}/${env.GOOGLE_SHEET_ID}/values/${encodeURIComponent(`${tab}!A1:Z1`)}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    const headerJson = (await headerResp.json()) as { values?: string[][] };
+    const headers = headerJson.values?.[0] ?? Object.keys(body);
+
+    const row = headers.map((h) => body[h] ?? "");
+
+    const appendResp = await fetch(
+      `${SHEETS_BASE}/${env.GOOGLE_SHEET_ID}/values/${encodeURIComponent(`${tab}!A1`)}:append?valueInputOption=USER_ENTERED`,
+      {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "content-type": "application/json" },
+        body: JSON.stringify({ values: [row] }),
       }
+    );
+    if (!appendResp.ok) {
+      const txt = await appendResp.text();
+      return json({ error: `Sheets append failed: ${txt}` }, 500);
+    }
+    return json({ success: true });
+  } catch (e: any) {
+    return json({ error: e.message }, 500);
+  }
+};
+
+// PUT: update row by id match in column "id"
+export const onRequestPut: PagesFunction<Env> = async ({ request, params, env }) => {
+  try {
+    const tab = decodeURIComponent(String((params as any).tab || ""));
+    if (!tab) return json({ error: "Missing tab" }, 400);
+    const body = await request.json();
+    const id = body.id;
+    if (!id) return json({ error: "Missing id" }, 400);
+
+    const token = await getAccessToken(env);
+    const rangeA1 = `${tab}!A1:Z1000`;
+
+    // Get all rows
+    const rowsResp = await fetch(
+      `${SHEETS_BASE}/${env.GOOGLE_SHEET_ID}/values/${encodeURIComponent(rangeA1)}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    const rowsJson = (await rowsResp.json()) as { values?: string[][] };
+    const rows = rowsJson.values ?? [];
+    if (rows.length === 0) return json({ error: "No rows" }, 404);
+    const headers = rows[0];
+    const idIdx = headers.indexOf("id");
+    if (idIdx === -1) return json({ error: 'No "id" column' }, 400);
+
+    const rowIndex = rows.findIndex((r, i) => i > 0 && r[idIdx] === id);
+    if (rowIndex === -1) return json({ error: "Row not found" }, 404);
+
+    const newRow = headers.map((h) => body[h] ?? "");
+    // Update that single row (1-based row numbers)
+    const updateResp = await fetch(
+      `${SHEETS_BASE}/${env.GOOGLE_SHEET_ID}/values/${encodeURIComponent(`${tab}!A${rowIndex + 1}`)}?valueInputOption=USER_ENTERED`,
+      {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${token}`, "content-type": "application/json" },
+        body: JSON.stringify({ values: [newRow] }),
+      }
+    );
+    if (!updateResp.ok) {
+      const txt = await updateResp.text();
+      return json({ error: `Sheets update failed: ${txt}` }, 500);
+    }
+    return json({ success: true });
+  } catch (e: any) {
+    return json({ error: e.message }, 500);
+  }
+};
+
+// DELETE: delete row by id (requires finding the sheetId + row index)
+async function getSheetIdByTitle(sheetId: string, title: string, token: string): Promise<number> {
+  const metaResp = await fetch(`${SHEETS_BASE}/${sheetId}?fields=sheets.properties`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const meta = (await metaResp.json()) as {
+    sheets: { properties: { sheetId: number; title: string } }[];
+  };
+  const found = meta.sheets.find((s) => s.properties.title === title);
+  if (!found) throw new Error(`Tab "${title}" not found`);
+  return found.properties.sheetId;
+}
+
+export const onRequestDelete: PagesFunction<Env> = async ({ request, params, env }) => {
+  try {
+    const tab = decodeURIComponent(String((params as any).tab || ""));
+    if (!tab) return json({ error: "Missing tab" }, 400);
+    const url = new URL(request.url);
+    const id = url.searchParams.get("id");
+    if (!id) return json({ error: "Missing id" }, 400);
+
+    const token = await getAccessToken(env);
+    const rangeA1 = `${tab}!A1:Z1000`;
+
+    // Find row index
+    const rowsResp = await fetch(
+      `${SHEETS_BASE}/${env.GOOGLE_SHEET_ID}/values/${encodeURIComponent(rangeA1)}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    const rowsJson = (await rowsResp.json()) as { values?: string[][] };
+    const rows = rowsJson.values ?? [];
+    if (rows.length === 0) return json({ error: "No rows" }, 404);
+    const headers = rows[0];
+    const idIdx = headers.indexOf("id");
+    if (idIdx === -1) return json({ error: 'No "id" column' }, 400);
+
+    const rowIndex = rows.findIndex((r, i) => i > 0 && r[idIdx] === id);
+    if (rowIndex === -1) return json({ error: "Row not found" }, 404);
+
+    // Find sheetId and delete the row via batchUpdate
+    const sheetNumericId = await getSheetIdByTitle(env.GOOGLE_SHEET_ID, tab, token);
+
+    const batchResp = await fetch(`${SHEETS_BASE}/${env.GOOGLE_SHEET_ID}:batchUpdate`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "content-type": "application/json" },
+      body: JSON.stringify({
+        requests: [
+          {
+            deleteDimension: {
+              range: {
+                sheetId: sheetNumericId,
+                dimension: "ROWS",
+                startIndex: rowIndex, // zero-based; includes header row indexing
+                endIndex: rowIndex + 1,
+              },
+            },
+          },
+        ],
+      }),
     });
 
-    if (!res.ok) {
-      const errorText = await res.text();
-      return new Response(
-        JSON.stringify({ error: `Failed to fetch ${tab}`, details: errorText }),
-        { status: res.status, headers: { "Content-Type": "application/json" } }
-      );
+    if (!batchResp.ok) {
+      const txt = await batchResp.text();
+      return json({ error: `Sheets delete failed: ${txt}` }, 500);
     }
-
-    const json = await res.json();
-    const values = json.values || [];
-    
-    if (values.length < 2) {
-      return new Response(JSON.stringify([]), {
-        headers: { "Content-Type": "application/json" },
-      });
-    }
-
-    const [headers, ...rows] = values;
-    const result = rows.map((r: string[]) =>
-      Object.fromEntries(headers.map((h: string, i: number) => [h, r[i] ?? ""]))
-    );
-
-    return new Response(JSON.stringify(result), {
-      headers: {
-        "Content-Type": "application/json",
-        "Cache-Control": "public, max-age=60"
-      },
-    });
-  } catch (err: any) {
-    return new Response(
-      JSON.stringify({ error: err.message || "Unexpected error" }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
-    );
+    return json({ success: true });
+  } catch (e: any) {
+    return json({ error: e.message }, 500);
   }
 };
