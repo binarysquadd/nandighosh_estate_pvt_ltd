@@ -44,3 +44,5 @@ next-env.d.ts
 # Custom Stuff
 binary-squad-477110-08fdd6ac5aca.json
 project-debug*
+.open-next
+.wrangler
