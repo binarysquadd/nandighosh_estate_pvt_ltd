@@ -110,7 +110,10 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, params, env }
       { headers: { Authorization: `Bearer ${token}` } }
     );
     const headerJson = (await headerResp.json()) as { values?: string[][] };
-    const headers = headerJson.values?.[0] ?? Object.keys(body);
+
+    // Explicitly treat the parsed JSON body as a plain object
+    const bodyObj = (body && typeof body === "object" && !Array.isArray(body)) ? body as Record<string, any> : {};
+    const headers = headerJson.values?.[0] ?? Object.keys(bodyObj);
 
     const row = headers.map((h) => body[h] ?? "");
 
