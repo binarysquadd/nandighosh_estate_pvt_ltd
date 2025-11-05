@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@opennextjs/cloudflare": "^1.11.0",
+    "framer-motion": "^12.23.24",
     "google-auth-library": "^10.5.0",
     "google-spreadsheet": "^5.0.2",
     "jose": "^6.1.0",

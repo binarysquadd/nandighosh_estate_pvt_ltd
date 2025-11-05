@@ -23,6 +23,7 @@ import AccessControl from "@/components/AccessControl";
 import VendorPayments from "@/components/VendorPayments";
 import LabourSummary from "@/components/LabourSummary";
 import SiteUpdates from "@/components/SiteUpdates";
+import LoadingScreen from "@/components/LoadingScreen";
 
 function getStatusColor(status: string) {
   switch (status) {
@@ -60,17 +61,15 @@ export default function ProjectDetailPage({
       <div className="p-6 text-sm text-gray-500">Preparing project details...</div>
     );
 
-  if (isLoading)
-    return (
-      <div className="p-6 text-sm text-gray-500">
-        Loading project data from Google Sheets...
-      </div>
-    );
+  // 🌀 Show loader until both projectId and data are ready
+  if (!projectId || isLoading) {
+    return <LoadingScreen />;
+  }
 
   if (error)
     return (
       <div className="p-6 text-sm text-red-600">
-        Error fetching project data from Google Sheets.
+        Error fetching project data from database.
       </div>
     );
 

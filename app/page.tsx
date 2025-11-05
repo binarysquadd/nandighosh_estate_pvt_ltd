@@ -1,17 +1,16 @@
 "use client";
 
 import { useSheetsData } from "@/hooks/useSheetsData";
+import LoadingScreen from "@/components/LoadingScreen";
 
 export default function DashboardPage() {
-  const { data: projects, isLoading, error } = useSheetsData("Projects");
+  const { data: projectsRaw, isLoading, error } = useSheetsData("Projects");
+  const projects = Array.isArray(projectsRaw) ? projectsRaw : [];
 
-  if (isLoading)
-    return (
-      <div className="p-6 text-sm text-gray-500">
-        Loading dashboard analytics...
-      </div>
-    );
+  // 🌀 Show animated loader instead of text
+  if (isLoading) return <LoadingScreen />;
 
+  // 🔴 Error state
   if (error)
     return (
       <div className="p-6 text-sm text-red-500">
@@ -19,7 +18,8 @@ export default function DashboardPage() {
       </div>
     );
 
-  if (!projects || projects.length === 0)
+  // ⚪️ Empty state
+  if (!projects.length)
     return (
       <div className="p-6 text-sm text-gray-500">
         No projects found in the sheet.
@@ -54,6 +54,7 @@ export default function DashboardPage() {
     .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 5);
 
+  // ✅ UI Rendering
   return (
     <div className="p-6">
       {/* Header */}
@@ -95,12 +96,10 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Budget Overview */}
+      {/* Budget Overview + Recent Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="bg-white p-5 rounded-lg border border-gray-200">
-          <h3 className="font-semibold text-gray-900 mb-4">
-            Budget Overview
-          </h3>
+          <h3 className="font-semibold text-gray-900 mb-4">Budget Overview</h3>
           <div className="space-y-3">
             <div>
               <p className="text-sm text-gray-500">Total Budget</p>

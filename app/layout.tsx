@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Sidebar from "@/components/Sidebar";
-
+import PageTransition from "@/components/PageTransition"; // ✅ import transition
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,10 +29,13 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <div className="flex">
+        <div className="flex min-h-screen bg-gray-50">
+          {/* 🧭 Sidebar */}
           <Sidebar />
-          <main className="flex-1 bg-gray-50">
-            {children}
+
+          {/* 🪄 Animated main area */}
+          <main className="flex-1 overflow-x-hidden">
+            <PageTransition>{children}</PageTransition>
           </main>
         </div>
       </body>
