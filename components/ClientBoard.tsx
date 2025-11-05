@@ -10,8 +10,11 @@ export default function ClientBoard({ projectId }: { projectId: string }) {
   const project = useMemo(() => {
     if (!allDetails || !projectId) return null;
 
+    let stringProjectId = String(projectId); // Convert to string
+    let trimmedProjectId = stringProjectId.trim();
+
     // Normalize projectId before matching
-    const pid = projectId.trim().toLowerCase();
+    const pid = trimmedProjectId.toLowerCase();
 
     const rows = (allDetails as any[]).map((r) => normalizeRow(r));
     const found = rows.find(

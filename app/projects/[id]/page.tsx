@@ -135,7 +135,7 @@ export default function ProjectDetailPage({
 
       {/* Client Info */}
       <section id="client" className="scroll-mt-20">
-        <ClientBoard project={project} />
+        <ClientBoard projectId={project} />
       </section>
 
       {/* Material Tracker */}
