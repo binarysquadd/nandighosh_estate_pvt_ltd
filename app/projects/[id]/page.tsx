@@ -78,16 +78,17 @@ export default function ProjectDetailPage({
   if (!project) return notFound();
 
   return (
+    
     <div className="relative p-4 sm:p-6 space-y-6 max-w-6xl mx-auto">
       {/* ========== HEADER ========== */}
       <header className="flex items-start justify-between border-b pb-4">
         <div>
-          <Link
+          {/* <Link
             href="/projects"
             className="text-sm text-blue-600 hover:underline block mb-1"
           >
             ← Back to Projects
-          </Link>
+          </Link> */}
 
           <h1 className="text-2xl font-semibold text-gray-900">{project.name}</h1>
           <p className="text-sm text-gray-500">{project.location}</p>
@@ -123,6 +124,7 @@ export default function ProjectDetailPage({
 
       {/* ========== MAIN CONTENT ========== */}
 
+
       {/* Overview */}
       <section id="overview" className="scroll-mt-20">
         <ProjectOverview project={project} />
@@ -135,22 +137,17 @@ export default function ProjectDetailPage({
 
       {/* Client Info */}
       <section id="client" className="scroll-mt-20">
-        <ClientBoard projectId={project} />
+        <ClientBoard projectId={project.id} />
+      </section>
+
+      {/* Tasks */}
+      <section id="tasks" className="scroll-mt-20">
+        <TasksBoard project={project} />
       </section>
 
       {/* Material Tracker */}
       <section id="materials" className="scroll-mt-20">
         <MaterialTracker projectId={project.id} />
-      </section>
-
-      {/* Labour Summary */}
-      <section id="labour" className="scroll-mt-20">
-        <LabourSummary projectId={project.id} />
-      </section>
-
-      {/* Site Updates */}
-      <section id="updates" className="scroll-mt-20">
-        <SiteUpdates projectId={project.id} />
       </section>
 
       {/* Milestones */}
@@ -163,9 +160,9 @@ export default function ProjectDetailPage({
         <SalesDashboard projectId={project.id} />
       </section>
 
-      {/* Tasks */}
-      <section id="tasks" className="scroll-mt-20">
-        <TasksBoard project={project} />
+      {/* Labour Summary */}
+      <section id="labour" className="scroll-mt-20">
+        <LabourSummary projectId={project.id} />
       </section>
 
       {/* Payments */}
@@ -183,14 +180,19 @@ export default function ProjectDetailPage({
         <TaxSummary projectId={project.id} />
       </section>
 
-      {/* Access Control */}
-      <section id="access" className="scroll-mt-20">
-        <AccessControl projectId={project.id} />
-      </section>
-
       {/* Vendor Payments */}
       <section id="vendors" className="scroll-mt-20">
         <VendorPayments projectId={project.id} />
+      </section>
+
+      {/* Site Updates */}
+      <section id="updates" className="scroll-mt-20">
+        <SiteUpdates projectId={project.id} />
+      </section>
+
+      {/* Access Control */}
+      <section id="access" className="scroll-mt-20">
+        <AccessControl projectId={project.id} />
       </section>
 
       {/* Footer */}
