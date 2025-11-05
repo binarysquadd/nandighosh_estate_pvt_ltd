@@ -36,14 +36,14 @@ export default function SiteUpdates({ projectId }: { projectId: string }) {
     updates.length > 0
       ? updates
       : [
-          {
-            id: "demo-1",
-            projectId,
-            date: new Date().toISOString().slice(0, 10),
-            caption: "On-site progress snapshot (MVP demo)",
-            img: "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=800&q=80",
-          },
-        ];
+        {
+          id: "demo-1",
+          projectId,
+          date: new Date().toISOString().slice(0, 10),
+          caption: "On-site progress snapshot (MVP demo)",
+          img: "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=800&q=80",
+        },
+      ];
 
   if (isLoading) {
     return (

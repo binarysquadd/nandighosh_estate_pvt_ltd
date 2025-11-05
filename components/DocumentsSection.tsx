@@ -204,9 +204,8 @@ export default function DocumentsDashboard({ projectId }: { projectId: string })
                     return (
                       <tr
                         key={doc.id}
-                        className={`border-b last:border-0 border-gray-100 hover:bg-gray-50 transition ${
-                          expSoon ? "bg-yellow-50" : ""
-                        }`}
+                        className={`border-b last:border-0 border-gray-100 hover:bg-gray-50 transition ${expSoon ? "bg-yellow-50" : ""
+                          }`}
                       >
                         <td className="py-2 font-medium text-gray-900 truncate">
                           {doc.name}

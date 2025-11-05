@@ -15,7 +15,7 @@ function parseRupees(v: string | number | undefined): number {
   s = s.replace(/₹|\s|,/g, "");
   // handle "Cr" (crore) and "L" (lakh)
   if (/cr$/i.test(s)) return parseFloat(s.replace(/cr/i, "")) * 1e7;   // 1 Cr = 10,000,000
-  if (/l$/i.test(s))  return parseFloat(s.replace(/l/i, ""))  * 1e5;   // 1 L = 100,000
+  if (/l$/i.test(s)) return parseFloat(s.replace(/l/i, "")) * 1e5;   // 1 L = 100,000
   const n = Number(s);
   return Number.isFinite(n) ? n : 0;
 }
@@ -41,9 +41,9 @@ export default function FinancialHealth({ projectId }: Props) {
   const payments = (allPayments || []).filter((p: any) => p.projectId === projectId);
 
   // Map dataset statuses -> our buckets
-  const isPaid      = (s: string) => /received|paid/i.test(s);
-  const isPending   = (s: string) => /pending|scheduled/i.test(s);
-  const isOverdue   = (s: string) => /overdue/i.test(s);
+  const isPaid = (s: string) => /received|paid/i.test(s);
+  const isPending = (s: string) => /pending|scheduled/i.test(s);
+  const isOverdue = (s: string) => /overdue/i.test(s);
 
   const received = payments
     .filter((p: any) => isPaid(p.status))
@@ -62,12 +62,12 @@ export default function FinancialHealth({ projectId }: Props) {
   const avgDelay =
     overdueRows.length > 0
       ? Math.round(
-          overdueRows.reduce((acc: number, p: any) => {
-            const due = new Date(p.dueDate);
-            const today = new Date();
-            return acc + Math.max(0, (today.getTime() - due.getTime()) / (1000 * 60 * 60 * 24));
-          }, 0) / overdueRows.length
-        )
+        overdueRows.reduce((acc: number, p: any) => {
+          const due = new Date(p.dueDate);
+          const today = new Date();
+          return acc + Math.max(0, (today.getTime() - due.getTime()) / (1000 * 60 * 60 * 24));
+        }, 0) / overdueRows.length
+      )
       : 0;
 
   const fmt = (n: number) => n.toLocaleString("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 });

@@ -78,7 +78,7 @@ export default function ProjectDetailPage({
   if (!project) return notFound();
 
   return (
-    
+
     <div className="relative p-4 sm:p-6 space-y-6 max-w-6xl mx-auto">
       {/* ========== HEADER ========== */}
       <header className="flex items-start justify-between border-b pb-4">

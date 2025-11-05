@@ -42,7 +42,7 @@ export default function VendorPaymentsDashboard({ projectId }: Props) {
   const avgProgress =
     rows.length > 0
       ? rows.reduce((sum, v) => sum + parsePercent(v.paidPercent), 0) /
-        rows.length
+      rows.length
       : 0;
   const completedCount = rows.filter((v) => parsePercent(v.paidPercent) === 100)
     .length;
@@ -171,9 +171,8 @@ export default function VendorPaymentsDashboard({ projectId }: Props) {
                     return (
                       <tr
                         key={i}
-                        className={`border-b last:border-0 border-gray-100 hover:bg-gray-50 transition ${
-                          pct === 100 ? "bg-green-50" : ""
-                        }`}
+                        className={`border-b last:border-0 border-gray-100 hover:bg-gray-50 transition ${pct === 100 ? "bg-green-50" : ""
+                          }`}
                       >
                         <td className="py-2 font-medium text-gray-900 truncate">
                           {v.vendor}
@@ -183,9 +182,8 @@ export default function VendorPaymentsDashboard({ projectId }: Props) {
                         <td className="py-2">
                           <div className="w-32 bg-gray-100 rounded-full h-2 mb-1">
                             <div
-                              className={`h-2 rounded-full ${
-                                pct === 100 ? "bg-green-600" : "bg-blue-600"
-                              }`}
+                              className={`h-2 rounded-full ${pct === 100 ? "bg-green-600" : "bg-blue-600"
+                                }`}
                               style={{ width: `${pct}%` }}
                             />
                           </div>

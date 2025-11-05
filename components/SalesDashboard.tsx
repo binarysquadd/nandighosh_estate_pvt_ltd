@@ -182,13 +182,12 @@ export default function SalesDashboard({ projectId }: { projectId: string }) {
                       <td className="py-2 text-gray-700">{u.price || "—"}</td>
                       <td className="py-2">
                         <span
-                          className={`inline-flex items-center justify-center px-2 py-1 rounded-full text-[11px] font-medium ${
-                            u.status === "Sold"
+                          className={`inline-flex items-center justify-center px-2 py-1 rounded-full text-[11px] font-medium ${u.status === "Sold"
                               ? "bg-green-100 text-green-700"
                               : u.status === "Reserved"
-                              ? "bg-amber-100 text-amber-700"
-                              : "bg-gray-100 text-gray-600"
-                          }`}
+                                ? "bg-amber-100 text-amber-700"
+                                : "bg-gray-100 text-gray-600"
+                            }`}
                         >
                           {u.status}
                         </span>

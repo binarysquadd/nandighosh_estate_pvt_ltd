@@ -52,7 +52,7 @@ export default function MaterialTracker({ projectId }: Props) {
       <div className="overflow-x-auto">
         <table className="w-full text-xs text-gray-700 align-middle table-fixed">
           {/* prettier-ignore */}
-          <colgroup><col style={{width:"38%"}}/><col style={{width:"46%"}}/><col style={{width:"16%"}}/></colgroup>
+          <colgroup><col style={{ width: "38%" }} /><col style={{ width: "46%" }} /><col style={{ width: "16%" }} /></colgroup>
 
           <thead>
             <tr className="text-gray-500 font-medium border-b border-gray-100">
@@ -89,9 +89,8 @@ export default function MaterialTracker({ projectId }: Props) {
                       {/* Flexing progress bar */}
                       <div className="flex-1 h-1.5 bg-gray-200 rounded-sm overflow-hidden">
                         <div
-                          className={`h-full transition-all duration-700 ease-out ${
-                            pct >= 100 ? "bg-green-500" : "bg-amber-500"
-                          }`}
+                          className={`h-full transition-all duration-700 ease-out ${pct >= 100 ? "bg-green-500" : "bg-amber-500"
+                            }`}
                           style={{ width: `${pct}%` }}
                         />
                       </div>

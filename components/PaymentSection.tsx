@@ -219,9 +219,8 @@ export default function PaymentDashboard({ projectId }: Props) {
                   {payments.map((p, i) => (
                     <tr
                       key={i}
-                      className={`border-b last:border-0 border-gray-100 hover:bg-gray-50 transition ${
-                        /sched/i.test(p.status) ? "bg-yellow-50" : ""
-                      }`}
+                      className={`border-b last:border-0 border-gray-100 hover:bg-gray-50 transition ${/sched/i.test(p.status) ? "bg-yellow-50" : ""
+                        }`}
                     >
                       {headers.map((key) => (
                         <td key={key} className="py-2 text-gray-700 whitespace-nowrap">

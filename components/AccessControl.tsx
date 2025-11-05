@@ -98,15 +98,14 @@ export default function AccessControl({ projectId }: { projectId: string }) {
                 <td className="px-3 py-2 font-medium">{m.name}</td>
                 <td className="px-3 py-2">
                   <span
-                    className={`text-xs px-2 py-1 rounded-full ${
-                      m.role === "Admin"
+                    className={`text-xs px-2 py-1 rounded-full ${m.role === "Admin"
                         ? "bg-blue-100 text-blue-700"
                         : m.role === "Engineer"
-                        ? "bg-green-100 text-green-700"
-                        : m.role === "Accountant"
-                        ? "bg-yellow-100 text-yellow-700"
-                        : "bg-gray-100 text-gray-600"
-                    }`}
+                          ? "bg-green-100 text-green-700"
+                          : m.role === "Accountant"
+                            ? "bg-yellow-100 text-yellow-700"
+                            : "bg-gray-100 text-gray-600"
+                      }`}
                   >
                     {m.role}
                   </span>

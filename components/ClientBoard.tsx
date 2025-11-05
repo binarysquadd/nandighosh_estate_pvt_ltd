@@ -10,8 +10,8 @@ export default function ClientBoard({ projectId }: { projectId: string }) {
   const project = useMemo(() => {
     if (!allDetails || !projectId) return null;
 
-    let stringProjectId = String(projectId); // Convert to string
-    let trimmedProjectId = stringProjectId.trim();
+    const stringProjectId = String(projectId); // Convert to string
+    const trimmedProjectId = stringProjectId.trim();
 
     // Normalize projectId before matching
     const pid = trimmedProjectId.toLowerCase();
@@ -56,12 +56,12 @@ export default function ClientBoard({ projectId }: { projectId: string }) {
   const contractors =
     typeof project.contractors === "string"
       ? project.contractors
-          .split(/[,;\n]/)
-          .map((c) => c.trim())
-          .filter(Boolean)
+        .split(/[,;\n]/)
+        .map((c) => c.trim())
+        .filter(Boolean)
       : Array.isArray(project.contractors)
-      ? project.contractors
-      : [];
+        ? project.contractors
+        : [];
 
   return (
     <section className="bg-white border border-gray-200 p-4 shadow-sm">

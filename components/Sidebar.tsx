@@ -8,36 +8,38 @@ import {
 } from "lucide-react";
 
 /* ---------- Helpers ---------- */
+import type { ReactElement } from "react";
 
-type Sec = { id: string; name: string; icon: JSX.Element };
+type Sec = { id: string; name: string; icon: ReactElement };
+
 
 const PROJECT_SECTIONS: Sec[] = [
-  { id: "overview",          name: "Overview",           icon: <House className="w-4 h-4" /> },
-  { id: "financial-health",  name: "Financial Summary",  icon: <ActivitySquare className="w-4 h-4" /> },
-  { id: "client",            name: "Client",             icon: <UserSquare2 className="w-4 h-4" /> },
-  { id: "tasks",             name: "Tasks",              icon: <ListChecks className="w-4 h-4" /> },
-  { id: "materials",         name: "Materials",          icon: <Boxes className="w-4 h-4" /> },
-  { id: "milestones",        name: "Milestones",         icon: <Flag className="w-4 h-4" /> },
-  { id: "sales",             name: "Sales",              icon: <Users2 className="w-4 h-4" /> },
-  { id: "labour",            name: "Labour",             icon: <Wrench className="w-4 h-4" /> },
-  { id: "payments",          name: "Payments",           icon: <CreditCard className="w-4 h-4" /> },
-  { id: "documents",         name: "Documents",          icon: <FileText className="w-4 h-4" /> },
-  { id: "tax",               name: "Tax",                icon: <ScrollText className="w-4 h-4" /> },
-  { id: "vendors",           name: "Vendor Payments",    icon: <Wallet2 className="w-4 h-4" /> },
-  { id: "updates",           name: "Site Updates",       icon: <ImageIcon className="w-4 h-4" /> },
-  { id: "access",            name: "Access Control",     icon: <ShieldCheck className="w-4 h-4" /> },
+  { id: "overview", name: "Overview", icon: <House className="w-4 h-4" /> },
+  { id: "financial-health", name: "Financial Summary", icon: <ActivitySquare className="w-4 h-4" /> },
+  { id: "client", name: "Client", icon: <UserSquare2 className="w-4 h-4" /> },
+  { id: "tasks", name: "Tasks", icon: <ListChecks className="w-4 h-4" /> },
+  { id: "materials", name: "Materials", icon: <Boxes className="w-4 h-4" /> },
+  { id: "milestones", name: "Milestones", icon: <Flag className="w-4 h-4" /> },
+  { id: "sales", name: "Sales", icon: <Users2 className="w-4 h-4" /> },
+  { id: "labour", name: "Labour", icon: <Wrench className="w-4 h-4" /> },
+  { id: "payments", name: "Payments", icon: <CreditCard className="w-4 h-4" /> },
+  { id: "documents", name: "Documents", icon: <FileText className="w-4 h-4" /> },
+  { id: "tax", name: "Tax", icon: <ScrollText className="w-4 h-4" /> },
+  { id: "vendors", name: "Vendor Payments", icon: <Wallet2 className="w-4 h-4" /> },
+  { id: "updates", name: "Site Updates", icon: <ImageIcon className="w-4 h-4" /> },
+  { id: "access", name: "Access Control", icon: <ShieldCheck className="w-4 h-4" /> },
 ];
 
 const GLOBAL_LINKS = (pathname: string) => ([
-  { name: "Dashboard", href: "/",         icon: <BarChart3 className="w-4 h-4" />, active: pathname === "/" || pathname.startsWith("/dashboard") },
-  { name: "Projects",  href: "/projects", icon: <FolderKanban className="w-4 h-4" />, active: pathname.startsWith("/projects") },
+  { name: "Dashboard", href: "/", icon: <BarChart3 className="w-4 h-4" />, active: pathname === "/" || pathname.startsWith("/dashboard") },
+  { name: "Projects", href: "/projects", icon: <FolderKanban className="w-4 h-4" />, active: pathname.startsWith("/projects") },
 ]);
 
 /* ---------- Component ---------- */
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const inProject  = pathname.startsWith("/projects/");
+  const inProject = pathname.startsWith("/projects/");
   const projectName = useMemo(
     () => (inProject ? decodeURIComponent(pathname.split("/projects/")[1] || "").replace(/-/g, " ") : ""),
     [pathname, inProject]
@@ -144,7 +146,7 @@ export default function Sidebar() {
       window.removeEventListener("resize", onResize);
       window.removeEventListener("scroll", onResize);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [activeId]);
 
   // Clicking a section: set lock & smooth-scroll
@@ -173,11 +175,10 @@ export default function Sidebar() {
             <a
               key={link.name}
               href={link.href}
-              className={`group flex items-center gap-2 px-3 py-1.5 rounded-md transition-colors ${
-                link.active
+              className={`group flex items-center gap-2 px-3 py-1.5 rounded-md transition-colors ${link.active
                   ? "text-gray-900 bg-gray-100 border-l-2 border-blue-500 font-medium"
                   : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-              }`}
+                }`}
             >
               <span className={link.active ? "text-blue-600" : "text-gray-400 group-hover:text-gray-700"}>
                 {link.icon}
@@ -210,7 +211,10 @@ export default function Sidebar() {
                   return (
                     <li
                       key={s.id}
-                      ref={(el) => (itemRefs.current[s.id] = el)}
+                      ref={(el) => {
+                        itemRefs.current[s.id] = el;
+                      }}
+
                       className="relative"
                     >
                       {/* Node */}

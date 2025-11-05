@@ -191,11 +191,10 @@ export default function TaxDashboard({ projectId }: { projectId: string }) {
                       <td className="py-2 text-gray-700">{i.gst}</td>
                       <td className="py-2">
                         <span
-                          className={`inline-flex items-center justify-center px-2 py-1 rounded-full text-[11px] font-medium ${
-                            i.status === "Paid"
+                          className={`inline-flex items-center justify-center px-2 py-1 rounded-full text-[11px] font-medium ${i.status === "Paid"
                               ? "bg-green-100 text-green-700"
                               : "bg-amber-100 text-amber-700"
-                          }`}
+                            }`}
                         >
                           {i.status}
                         </span>
